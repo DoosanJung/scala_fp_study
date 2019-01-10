@@ -1,124 +1,159 @@
-abstract class Element {
-  //where each string represents a line
-  //class Element declares the abstract method contents, but no definition.
-  def contents: Array[String] //no equal sign or body => abstract method
-  /*
-  contents is declared as a method without implementation.
-  the method is an abstract member of class Element.
-  A class with abstract members must be declared abstract.
-  */
-  def height: Int = contents.length
-  def width: Int 
-    = if (height == 0) 0 else contents(0).length
-  //parameterless methods height, width
-  //
-}
+/*
+You might also choose to hide the hierarchy behind a factory object.
+Clients would then use these factory methods for object construction rather than 
+constructing the objects directly with new.
+The details of how objects are represented with classes can be hidden.
+*/
 
 /*
-completely equivalent from a client's point of view.
+with factory method...no need to create new ArrayElement instances explicitly.
 abstract class Element {
   def contents: Array[String]
-  val height = contents.length
-  val width =
+  def width: Int =
     if (height == 0) 0 else contents(0).length
-}
-//slightly faster (pre-computed when initialization), but requires extra memory
-*/
-
-//a subclass that extends Element and implements the abstract contents method.
-class ArrayElement(conts: Array[String]) extends Element {
-  //class ArrayElement is “composed” out of class Array[String]
-  def contents: Array[String] = conts
-}
-/* ...extends Element ...
-(1) class ArrayElement inherit all non-private members from class Element
-(2) makes the type ArrayElement a subtype of the type Element
-
-If you leave out an extends clause, the Scala compiler implicitly as- sumes your class extends 
-from scala.AnyRef.
-Thus, class Element implicitly extends class AnyRef.
-*/
-
-//the contents method in ArrayElement overrides abstract method contents in class Element.
-//By contrast, class ArrayElement inherits the width and height methods from class Element.
-//If superclass is abstract, we say "implement" instead of "override".
-val ae = new ArrayElement(Array("hello","world"))
-println(ae.width)
-
-//subtyping: a value of the sub can be used wherever a value of the super is required.
-val e: Element = new ArrayElement(Array("hello"))
-println(e)
-//Variable e is defined to be of type Element, so its initializing value should also be an Element. 
-//In fact, the initializing value’s type is ArrayElement.
-
-/*
-same as above
-class ArrayElement(conts: Array[String]) extends Element {
-  val contents: Array[String] = conts
-  //change the implementation of contents in class ArrayElement from a method to a field 
-  //without having to modify the abstract method definition of contents in class Element
+  def height: Int = contents.length
+  def above(that: Element): Element =
+    new ArrayElement(this.contents ++ that.contents)
+  def beside(that: Element): Element =
+    new ArrayElement(
+      for (
+        (line1, line2) <- this.contents zip that.contents
+      ) yield line1 + line2
+    )
+  override def toString = contents mkString "\n"
 }
 */
 
 /*
-Scala’s two namespaces are:
-• values (fields, methods, packages, and singleton objects)
-• types (class and trait names)
-
-THIS WILL NOT WORK because a field and method have the same name 
-(fields, methods same namespace)
-
-class WontCompile {
-    private var f = 0 // Won’t compile, because a field
-    def f = 1         // and method have the same name
+we still need to implement widen ahd heighten...
+import Element.elem
+abstract class Element {
+  def contents: Array[String]
+  def width: Int =
+    if (height == 0) 0 else contents(0).length
+  def height: Int = contents.length
+  
+  def above(that: Element): Element =
+    elem(this.contents ++ that.contents)
+  
+  def beside(that: Element): Element =
+    elem(
+      for (
+        (line1, line2) <- this.contents zip that.contents
+      ) yield line1 + line2
+    )
+  override def toString = contents mkString "\n"
 }
 */
 
-//ArrayElement has a parameter conts whose sole purpose is to be copied into the contents.
-//redundant. unnecessary.
+import Element.elem
+abstract class Element {
+  def contents:  Array[String]
+  def width: Int = contents(0).length
+  def height: Int = contents.length
+  
+  def above(that: Element): Element = {
+    val this1 = this widen that.width
+    val that1 = that widen this.width
+    elem(
+      this1.contents ++ that1.contents
+    )
+  }
 
-class ArrayElementConcise(
-  //combine the parameter and the field in a single 'parametric field'
-  val contents: Array[String] //defines a parameter and field (same name) at the same time
+  def beside(that: Element): Element = {
+    val this1 = this heighten that.height
+    val that1 = that heighten this.height
+    elem(
+      for (
+        (line1, line2) <- this1.contents zip that1.contents
+      ) yield line1 + line2
+    )
+  }
+       
+  def widen(w: Int): Element =
+    if (w <= width) this
+    else {
+      val left = elem(' ', (w - width) / 2, height)
+      var right = elem(' ', w - width - left.width, height)
+      left beside this beside right
+  }
+       
+  def heighten(h: Int): Element =
+    if (h <= height) this
+    else {
+      val top = elem(' ', width, (h - height) / 2)
+      var bot = elem(' ', width, h - height - top.height)
+      top above this above bot
+  }
+        
+  override def toString = contents mkString "\n"
+}
+
+
+/*
+==> private classes
+class ArrayElement(
+    val contents: Array[String]
 ) extends Element
 
-/*
-Same as below..
-class ArrayElementConcis(anyArbitraryName: Array[String]) extends Element {
-  val contents: Array[String] = anyArbitraryName
+class LineElement(s: String) extends Element {
+    val contents = Array(s)
+    override def width = s.length
+    override def height = 1
+}
+
+class UniformElement(
+    ch: Char,
+    override val width: Int,
+    override val height: Int
+  ) extends Element {
+    private val line = ch.toString * width
+    def contents = Array.fill(height)(line)
 }
 */
 
-//possible to add modifiers such as private, protected, or override to these parametric fields
-class Cat {
-  val dangerous = false
-}
-
-class Tiger(
-  override val dangerous: Boolean,
-  private var age: Int
-) extends Cat
-
 /*
-above is the shorthand for this..
-class Tiger(param1: Boolean, param2:Int) extends Cat{
-  override val dangerous = param1
-  private var age = param2
+object Element {
+  def elem(contents: Array[String]): Element =
+    new ArrayElement(contents)
+  
+  def elem(chr: Char, width: Int, height: Int): Element =
+    new UniformElement(chr, width, height)
+  
+  def elem(line: String): Element =
+    new LineElement(line)
 }
 */
-
-//add more subclasses..
-//a layout element consisting of a single line given by a string
-class LineElement(s: String) extends ArrayElement(Array(s)) {
-  //LineElement passes Array(s) to ArrayElement’s primary constructor by placing it 
-  //in parentheses after the superclass ArrayElement’s name. 
-  override def width = s.length
-  override def height = 1
-  //The modifier is optional if a member implements an abstract member with the same name.
-  //Since height and width in LineElement override concrete definitions in class Element, 
-  //"override" is required. 
+object Element {
+  private class ArrayElement(
+    val contents: Array[String]
+  ) extends Element
+  
+  private class LineElement(s: String) extends Element {
+    val contents = Array(s)
+    override def width = s.length
+    override def height = 1
+  }
+  
+  private class UniformElement(
+    ch: Char,
+    override val width: Int,
+    override val height: Int
+  ) extends Element {
+    private val line = ch.toString * width
+    def contents = Array.fill(height)(line)
+  }
+  
+  def elem(contents:  Array[String]): Element =
+    new ArrayElement(contents)
+  
+  def elem(chr: Char, width: Int, height: Int): Element =
+    new UniformElement(chr, width, height)
+  
+  def elem(line: String): Element =
+    new LineElement(line)
 }
-
-val le = new LineElement("hello")
-println(le.width)
-println(le.height)
+/*
+given the factory methods, the subclasses ArrayElement, LineElement and UniformElement could 
+now be private, because they need no longer be accessed directly by clients.
+*/
