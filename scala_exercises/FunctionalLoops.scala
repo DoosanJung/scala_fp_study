@@ -4,7 +4,7 @@ def abs(x: Double) = if (x>=0) x else -x
 println(abs(2))
 println(abs(-2))
 
-/**Boolean expressions**/
+/*Boolean expressions*/
 println("ab"=="ab")
 println("ab"!="ab")
 
@@ -32,7 +32,32 @@ def sqrt(x:Double) = sqrtIter(1.0, x)
 
 println(sqrt(2))
 
-/** Calculates the factorial of parameter x */
+/*
+Above method fails with very small and large numbers..
+*/
+object session {
+  def abs(x: Double) = if (x > 0) x else -x
+
+  def sqrtIter(guess: Double, x: Double): Double =
+    if (isGoodEnough(guess, x)) guess
+    else sqrtIter(improve(guess, x), x)
+
+  def isGoodEnough(guess: Double, x: Double) =
+    //using absolute threshold 0.001 caused the issue
+    abs(guess * guess -x) /x < 0.001
+
+  def improve(guess: Double, x: Double) =
+    (guess + x/guess)/2
+
+  def sqrt(x: Double) = sqrtIter(1.0, x)
+
+  println(sqrt(2))
+  println(sqrt(4))
+  println(sqrt(1e-6)) //expected value Double = 0.00100
+  println(sqrt(1e60)) //expected value Double = 1.0000
+}
+
+/* Calculates the factorial of parameter x */
 def factorial(n: Int): Int =
   if (n == 1) n
   else factorial(n - 1) * n
