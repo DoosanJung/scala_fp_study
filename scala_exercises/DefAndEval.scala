@@ -34,4 +34,15 @@ base * height/2
 println(triangleArea(3, 4))
 println(triangleArea(5, 6))
 
+/*
+Write a function and such that for all argument expressions x and y:
+* and(x,y) == x && y
+*/
+def loop: Boolean = loop
+def and(x: Boolean, y: => Boolean) = if (x) y else false
 
+// second parameter passed as call-by-name parameter
+
+println(and(true, true)) //true expected
+println(and(true, false)) //false expected
+println(and(false, loop)) //false expected
