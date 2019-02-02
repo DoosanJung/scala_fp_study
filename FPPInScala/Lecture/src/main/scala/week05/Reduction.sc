@@ -15,6 +15,13 @@ object Reduction {
   def concat[T](xs: List[T], ys: List[T]): List[T] =
     (xs foldRight ys) (_ :: _)
   //cannot replace foldRight by foldLeft
+
+  //exercise
+  def mapFun[T, U](xs: List[T], f: T => U): List[U] = 
+    (xs foldRight List[U]())((x, y) => f(x) :: y)
+
+  def lengthFun[T](xs: List[T]): Int = 
+    (xs foldRight 0)((_, y) => y+1)
 }
 
 val lst = List(1, 2, 3, 4)
@@ -23,3 +30,7 @@ Reduction.product(lst)
 Reduction.sumFold(lst)
 Reduction.productFold(lst)
 Reduction.concat(lst, lst)
+
+//exercise
+Reduction.mapFun[Int, Int](lst, x => x + 5)
+Reduction.lengthFun(lst)
