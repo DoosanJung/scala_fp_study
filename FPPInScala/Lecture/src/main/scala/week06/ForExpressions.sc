@@ -16,7 +16,7 @@ object Pairs {
       i => (1 until i) map (
         j => (i, j)
         )
-      ) filter (pair => isPrime(pair._1 + pair._2))
+    ) filter (pair => isPrime(pair._1 + pair._2))
 
   def solutionUsingFor(n: Int) =
     for {
@@ -24,10 +24,18 @@ object Pairs {
       j <- 1 until i
       if isPrime(i +j)
     } yield (i, j)
+
+  //direct translation of For expression
+  def solutionTranslationFor(n: Int) =
+    (1 until n) flatMap (i =>
+      (1 until i).withFilter(j => isPrime(i + j))
+      .map (j => (i, j))
+    )
 }
 
 Pairs.solution(7)
 Pairs.solutionUsingFor(7)
+Pairs.solutionTranslationFor(7)
 
 object Exercise {
 
