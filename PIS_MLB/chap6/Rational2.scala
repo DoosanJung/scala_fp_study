@@ -90,7 +90,7 @@ multiplication method that takes a Rational argument—it couldn’t because
 class Rational is not a standard class in the Scala library.
 */
 
-implicit def intToRationalOverload(x:Int) = new RationalOverload(x)
+implicit def intToRationalOverload(x:Int): RationalOverload = new RationalOverload(x)
 /*
 This defines a conversion method from Int to Rational. The implicit 
 modifier in front of the method tells the compiler to apply it 
