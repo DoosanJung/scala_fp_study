@@ -16,7 +16,7 @@ object PatternMatching {
   def simplifyTop(expr: Expr): Expr = expr match {
     case UnOp("-", UnOp("-", e))  => e // Double negation
     case BinOp("+", e, Number(0)) => e // Adding zero
-    case BinOp("*", e, Number(1)) => e
+    case BinOp("*", e, Number(1)) => e // Multiplying by one
     case _ => expr // Multiplying by one
   }
 
@@ -25,6 +25,24 @@ object PatternMatching {
 
   val op = BinOp("+", Number(1), v)
   val resop = simplifyTop(BinOp("+", op, Number(0)))
+
+  //more general form of simplifyTop
+  def simplifyAll(expr: Expr): Expr = expr match {
+    case UnOp("-", UnOp("-", e)) =>
+      simplifyAll(e)
+    // ‘-’ is its own inverse
+    case BinOp("+", e, Number(0)) =>
+      simplifyAll(e)
+    // ‘0’ is a neutral element for ‘+’
+    case BinOp("*", e, Number(1)) =>
+      simplifyAll(e)
+    // ‘1’ is a neutral element for ‘*’
+    case UnOp(op, e) =>
+      UnOp(op, simplifyAll(e))
+    case BinOp(op, l, r) =>
+      BinOp(op, simplifyAll(l), simplifyAll(r))
+    case _ => expr
+  }
 
 }
 
